@@ -1,6 +1,11 @@
 from matplotlib import pyplot as plt
 from sklearn.preprocessing import Normalizer
 from sklearn import datasets, linear_model
+from sklearn.neural_network import MLPClassifier
+from sklearn.neural_network import MLPRegressor
+from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score 
 
 import numpy as numpy
 
@@ -32,8 +37,69 @@ def train(i):
     return x_train, x_test, y_train, y_test
 
 
-def scipy_linear_mod(x_train, x_test, y_train, y_test):
+def scipy_linear_mod(x_train, x_test, y_train, y_test, transform, model):
+    if transform == True:
+        transformer = Normalizer().fit(data_inputx)
+        data_inputx = transformer.transform(data_inputx)
+
     if model == 0:
-        regr = linear_model.Linear
-transformer = Normalizer().fit(data_inputx)
-data_inputx = transformer.transform(data_inputx)
+        regr = linear_model.LinearRegression()
+        regr.fit(x_train, y_train)
+
+        y_pred = regr.predict(x_test)
+        y_test[:, ] = np.where(y_test[:, ]>=7, 1, 0)
+        rmse = np.sqrt(mean_squared_error(y_test, y_pred))
+        rsquared = r2_score(y_test, y_pred)
+
+        return rmse, rsquared
+
+    elif model == 1:
+        y_train[:, ] = np.where(y_train[:, ]>=7, 1, 0)
+        regr = linear_model.LogisticRegression()
+        regr.fit(x_train, y_train)
+
+        y_pred = regr.predict_proba(x_test)[:, -1]
+        y_test[:, ] = np.where(y_test[:, ]>=7, 1, 0)
+        acc = accuracy_score(y_pred, y_test)
+        auc = roc_auc_score(y_pred, y_test)
+        
+        return acc, auc
+#Ask about way of comparison
+
+def neural(x_train, x_test, y_train, y_test, transform, model): #compare with best approach from prev qu.
+    if model == 0: 
+        mlp = MLPRegressor(hidden_layer_sizes=(3, ), activation='identity', solver='sgd', learning_rate_init = 0.001, max_iter=1000)
+        mlp.fit(x_train, y_train)
+    elif model == 1:
+        y_train[:, ] = np.where(y_train[:, ]>=7, 1, 0)
+        mlp = MLPClassifier(hidden_layer_sizes = (3, ), activation='logistic', solver='sgd', learning_rate_init = 0.001, max_iter=1000)
+        mlp.fit(x_train, y_train)
+
+def main:
+    rmse = np.zeros(30)
+    rsquared = np.zeros(30)
+    acc = np.zeros(30)
+    auc = np.zeros(30)
+
+    for i in range(30):
+        x_train, x_test, y_train, y_test = train(i)
+        rmse, rsquared = scipy_linear_mod(x_train, x_test, y_train, y_test, transform, 0)
+        acc, auc = scipy_linear_mod(x_train, x_test, y_train, y_test, transform, 1)
+        rmse[i] = rmse
+        rsquared[i] = rsquared
+        acc[i] = acc
+        auc[i] = auc
+    
+    print("RMSE_ALL: %.2f" %rmse)
+    print("Rsquared: %.2f" %rsquared)
+    print("Accuracy: %.2f" %acc)
+    print("AUC: %.2f" %auc)
+
+    print("RMSE_mean: %.2f" %np.mean(rmse))
+    print("RMSE_sd: %.2f" %np.sd(rmse))
+    print("Rsquared_mean: %.2f" %np.mean(rsquared))
+    print("Rsquared_sd: %.2f" %np.sd(rsquared))
+   
+   #Ask about reporting for training set
+if __name__ =='__main__':
+    main() 
