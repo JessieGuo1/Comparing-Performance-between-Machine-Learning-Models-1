@@ -14,25 +14,24 @@ from pandas import DataFrame
 
 df = pd.read_csv('abalone.data')
 print(df)
-# scatter plot, dots colored by class value
 
-colors = {'corr_feat_1':'red', 'corr.feat_2':'blue'}
-fig, ax = plt.subplots()
-grouped = df.groupby('label')
-for key, group in grouped:
-    group.plot(ax=ax, kind='scatter', CHANGE='x', ring_age='y', label=key, color=colors[key])
-plt.savefig('scatter.png')
-plt.clf()
-plt.close()
-
-
+def scatter():
+    # scatter plot, dots colored by class value
+    colors = {'corr_feat_1':'red', 'corr.feat_2':'blue'}
+    fig, ax = plt.subplots()
+    grouped = df.groupby('label')
+    for key, group in grouped:
+        group.plot(ax=ax, kind='scatter', CHANGE='x', ring_age='y', label=key, color=colors[key])
+    plt.savefig('scatter.png')
+    plt.clf()
+    plt.close()
 
 data_inputx = df[:, 0:8].values
 data_inputy = df[:, -1].values
 
 def train(i):
 
-    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.4, random_state=i)
+    x_train, x_test, y_train, y_test = train_test_split(data_inputx, data_inputy, test_size=0.4, random_state=i)
 
     return x_train, x_test, y_train, y_test
 
