@@ -7,13 +7,12 @@ from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score 
 
-import numpy as numpy
+import numpy as np
 
 import pandas as pd
 from pandas import DataFrame
 
-df = pd.read_csv('abalone.data')
-print(df)
+NUM_EXPERIMENTS = 30
 
 def scatter():
     # scatter plot, dots colored by class value
@@ -26,10 +25,9 @@ def scatter():
     plt.clf()
     plt.close()
 
-data_inputx = df[:, 0:8].values
-data_inputy = df[:, -1].values
 
-def train(i):
+
+def split_data(i, data_inputx, data_inputy):
 
     x_train, x_test, y_train, y_test = train_test_split(data_inputx, data_inputy, test_size=0.4, random_state=i)
 
@@ -74,14 +72,21 @@ def neural(x_train, x_test, y_train, y_test, transform, model): #compare with be
         mlp = MLPClassifier(hidden_layer_sizes = (3, ), activation='logistic', solver='sgd', learning_rate_init = 0.001, max_iter=1000)
         mlp.fit(x_train, y_train)
 
-def main:
-    rmse = np.zeros(30)
-    rsquared = np.zeros(30)
-    acc = np.zeros(30)
-    auc = np.zeros(30)
+def main():
+    df = pd.read_csv('abalone.data', header=None, names=["sex", "length", "diameter", "height", "whole_weight", "shucked_weight", "viscera_weight", "shell_weight", "rings"])
+    df.iloc[:, 0] = df.iloc[:, 0].replace({"M": 0, "F": 1})
+    print(df)
 
-    for i in range(30):
-        x_train, x_test, y_train, y_test = train(i)
+    rmse = np.zeros(NUM_EXPERIMENTS)
+    rsquared = np.zeros(NUM_EXPERIMENTS)
+    acc = np.zeros(NUM_EXPERIMENTS)
+    auc = np.zeros(NUM_EXPERIMENTS)
+
+    data_inputx = df[:, 0:8].values
+    data_inputy = df[:, -1].values
+
+    for i in range(NUM_EXPERIMENTS):
+        x_train, x_test, y_train, y_test = split_data(i, data_inputx, data_inputy)
         rmse, rsquared = scipy_linear_mod(x_train, x_test, y_train, y_test, transform, 0)
         acc, auc = scipy_linear_mod(x_train, x_test, y_train, y_test, transform, 1)
         rmse[i] = rmse
@@ -99,6 +104,6 @@ def main:
     print("Rsquared_mean: %.2f" %np.mean(rsquared))
     print("Rsquared_sd: %.2f" %np.sd(rsquared))
    
-   #Ask about reporting for training set
+#Ask about reporting for training set
 if __name__ =='__main__':
     main() 
