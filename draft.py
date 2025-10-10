@@ -60,34 +60,39 @@ def split_data(i, data_inputx, data_inputy):
     return x_train, x_test, y_train, y_test
 
 
-def scipy_linear_mod(x_train, x_test, y_train, y_test, transform, model):
+def scipy_linear_mod(x_train_real, x_test_real, y_train, y_test, transform, model):
     if transform == True:
-        transformer = Normalizer().fit(data_inputx)
-        data_inputx = transformer.transform(data_inputx)
+        x_train = x_train_real.copy()
+        x_test = x_test_real.copy()
+        transformer = Normalizer().fit(x_train.iloc[:,1:])
+        x_train.iloc[:, 1:] = transformer.transform(x_train.iloc[:, 1:])
+        x_test.iloc[:, 1:] = transformer.transform(x_test.iloc[:, 1:])
+    else:
+        x_train = x_train_real
+        x_test = x_test_real
 
     if model == 0:
         regr = linear_model.LinearRegression()
         regr.fit(x_train, y_train)
 
         y_pred = regr.predict(x_test)
-        y_test[:, ] = np.where(y_test[:, ]>=7, 1, 0)
         rmse = np.sqrt(mean_squared_error(y_test, y_pred))
         rsquared = r2_score(y_test, y_pred)
 
         return rmse, rsquared
 
     elif model == 1:
-        y_train[:, ] = np.where(y_train[:, ]>=7, 1, 0)
-        regr = linear_model.LogisticRegression()
-        regr.fit(x_train, y_train)
+        y_train_binary = (np.asarray(y_train) >= 7)
+        y_test_binary = (np.asarray(y_test) >= 7)
+        regr = linear_model.LogisticRegression(max_iter=1000)
+        regr.fit(x_train, y_train_binary)
 
-        y_pred = regr.predict_proba(x_test)[:, -1]
-        y_test[:, ] = np.where(y_test[:, ]>=7, 1, 0)
-        acc = accuracy_score(y_pred, y_test)
-        auc = roc_auc_score(y_pred, y_test)
+        y_probs = regr.predict_proba(x_test)[:, 1]
+        y_pred = (y_probs >= 0.5)
+        acc = accuracy_score(y_test_binary, y_pred)
+        auc = roc_auc_score(y_test_binary, y_probs)
         
         return acc, auc
-#Ask about way of comparison
 
 def neural(x_train, x_test, y_train, y_test, transform, model): #compare with best approach from prev qu.
     if model == 0: 
@@ -128,30 +133,19 @@ def main():
 
     for i in range(NUM_EXPERIMENTS):
         x_train, x_test, y_train, y_test = split_data(i, data_inputx, data_inputy)
-        rmse, rsquared = scipy_linear_mod(x_train, x_test, y_train, y_test, False, 0)
-        acc, auc = scipy_linear_mod(x_train, x_test, y_train, y_test, False, 1)
-        rmse[i] = rmse
-        rsquared[i] = rsquared
-        acc[i] = acc
-        auc[i] = auc
+        rmse_val, rsquared_val = scipy_linear_mod(x_train, x_test, y_train, y_test, False, 0)
+        acc_val, auc_val = scipy_linear_mod(x_train, x_test, y_train, y_test, False, 1)
+        rmse[i], rsquared[i], acc[i], auc[i] = rmse_val, rsquared_val, acc_val, auc_val
 
-        rmse, rsquared = scipy_linear_mod(x_train, x_test, y_train, y_test, True, 0)
-        acc, auc = scipy_linear_mod(x_train, x_test, y_train, y_test, True, 1)
-        rmse_norm[i] = rmse
-        rsquared_norm[i] = rsquared
-        acc_norm[i] = acc
-        auc_norm[i] = auc
+        rmse_val, rsquared_val = scipy_linear_mod(x_train, x_test, y_train, y_test, True, 0)
+        acc_val, auc_val = scipy_linear_mod(x_train, x_test, y_train, y_test, True, 1)
+        rmse_norm[i], rsquared_norm[i], acc_norm[i], auc_norm[i] = rmse_val, rsquared_val, acc_val, auc_val
     
-    print("RMSE_ALL: %.2f" %rmse)
-    print("Rsquared: %.2f" %rsquared)
-    print("Accuracy: %.2f" %acc)
-    print("AUC: %.2f" %auc)
-
-    print("RMSE_mean: %.2f" %np.mean(rmse))
-    print("RMSE_sd: %.2f" %np.sd(rmse))
-    print("Rsquared_mean: %.2f" %np.mean(rsquared))
-    print("Rsquared_sd: %.2f" %np.sd(rsquared))
-   
+    print(f"RMSE no norm: {rmse.mean()}, with norm: {rmse_norm.mean()}")
+    print(f"RMSE no norm: {rsquared.mean()}, with norm: {rsquared_norm.mean()}")
+    print(f"RMSE no norm: {acc.mean()}, with norm: {acc_norm.mean()}")
+    print(f"RMSE no norm: {auc.mean()}, with norm: {auc_norm.mean()}")
+    
 #Ask about reporting for training set
 if __name__ =='__main__':
     main() 
