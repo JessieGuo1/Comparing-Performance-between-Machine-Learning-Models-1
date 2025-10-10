@@ -11,21 +11,47 @@ import numpy as np
 
 import pandas as pd
 from pandas import DataFrame
+import matplotlib.pyplot as plt
 
 NUM_EXPERIMENTS = 30
 
-def scatter():
-    # scatter plot, dots colored by class value
-    colors = {'corr_feat_1':'red', 'corr.feat_2':'blue'}
-    fig, ax = plt.subplots()
-    grouped = df.groupby('label')
-    for key, group in grouped:
-        group.plot(ax=ax, kind='scatter', CHANGE='x', ring_age='y', label=key, color=colors[key])
-    plt.savefig('scatter.png')
-    plt.clf()
+def scatter(df, feature, target):
+    plt.figure()
+    plt.scatter(df[target], df[feature])
+    plt.xlabel(target)
+    plt.ylabel(feature)
+    plt.title(f"scatter_{feature}")
+    plt.savefig(f"scatter_{feature}.png")
     plt.close()
 
+def hist(df, feature, bins=30):
+    plt.figure()
+    plt.hist(df[feature], bins=bins)
+    plt.xlabel(feature)
+    plt.ylabel("amount")
+    plt.title(f"hist_{feature}")
+    plt.savefig(f"hist_{feature}.png")
+    plt.close()
 
+def gen_plots(df):
+    # Heatmap
+    corr = df.corr()
+    print(corr)
+    plt.imshow(corr, vmin=-1, vmax=1)
+    plt.colorbar()
+    plt.savefig("heatmap.png")
+    plt.close()
+
+    ringcorrs = df.drop(columns=["sex", "rings"]).corrwith(df["rings"])
+    max_corr = ringcorrs.idxmax()
+    min_corr = ringcorrs.idxmin()
+
+    scatter(df, max_corr, "rings")
+    scatter(df, min_corr, "rings")
+
+    hist(df, max_corr)
+    hist(df, min_corr)
+    hist(df, "rings")
 
 def split_data(i, data_inputx, data_inputy):
 
@@ -72,9 +98,13 @@ def neural(x_train, x_test, y_train, y_test, transform, model): #compare with be
         mlp = MLPClassifier(hidden_layer_sizes = (3, ), activation='logistic', solver='sgd', learning_rate_init = 0.001, max_iter=1000)
         mlp.fit(x_train, y_train)
 
+def process_data(df):
+    df.iloc[:, 0] = df.iloc[:, 0].replace({"M": 0, "F": 1, "I": 2})
+
 def main():
     df = pd.read_csv('abalone.data', header=None, names=["sex", "length", "diameter", "height", "whole_weight", "shucked_weight", "viscera_weight", "shell_weight", "rings"])
-    df.iloc[:, 0] = df.iloc[:, 0].replace({"M": 0, "F": 1})
+    process_data(df)
+    gen_plots(df)
     print(df)
 
     rmse = np.zeros(NUM_EXPERIMENTS)
