@@ -5,7 +5,7 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.neural_network import MLPRegressor
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, roc_auc_score 
+from sklearn.metrics import accuracy_score, roc_auc_score, roc_curve 
 
 import numpy as np
 
@@ -71,6 +71,8 @@ def scipy_linear_mod(x_train_real, x_test_real, y_train, y_test, transform, mode
         x_train = x_train_real
         x_test = x_test_real
 
+    type_str = "norm" if transform else "no_norm"
+
     if model == 0:
         regr = linear_model.LinearRegression()
         regr.fit(x_train, y_train)
@@ -79,11 +81,37 @@ def scipy_linear_mod(x_train_real, x_test_real, y_train, y_test, transform, mode
         rmse = np.sqrt(mean_squared_error(y_test, y_pred))
         rsquared = r2_score(y_test, y_pred)
 
+        plt.figure()
+        plt.scatter(y_test, y_pred)
+        plt.xlabel("True rings")
+        plt.ylabel("Predicted rings")
+        plt.title(f"Linear: y_true vs y_pred ({type_str})")
+        plt.savefig(f"linreg_scatter_{type_str}.png")
+        plt.close()
+
+        # residuals histogram
+        res = np.asarray(y_test) - np.asarray(y_pred)
+        plt.figure()
+        plt.hist(res, bins=30)
+        plt.xlabel("Residual = y_true - y_pred"); plt.ylabel("count")
+        plt.title(f"Linear: residuals hist ({type_str})")
+        plt.savefig(f"regression resid hist {type_str}.png");
+        plt.close()
+
+        # residuals vs fitted
+        plt.figure()
+        plt.scatter(y_pred, res)
+        plt.xlabel("Fitted")
+        plt.ylabel("Residual")
+        plt.title(f"Linear: residuals vs fitted ({type_str})")
+        plt.savefig(f"regression resid vs fit {type_str}.png")
+        plt.close()
+
         return rmse, rsquared
 
     elif model == 1:
         y_train_binary = (np.asarray(y_train) >= 7)
-        y_test_binary = (np.asarray(y_test) >= 7)
+        y_test_binary = (np.asarray(y_test) >= 7) # note this is y true
         regr = linear_model.LogisticRegression(max_iter=1000)
         regr.fit(x_train, y_train_binary)
 
@@ -91,7 +119,17 @@ def scipy_linear_mod(x_train_real, x_test_real, y_train, y_test, transform, mode
         y_pred = (y_probs >= 0.5)
         acc = accuracy_score(y_test_binary, y_pred)
         auc = roc_auc_score(y_test_binary, y_probs)
-        
+
+        fpr, tpr, thresh = roc_curve(y_test_binary, y_probs)
+        plt.figure()
+        plt.plot(fpr, tpr); plt.plot([0,1], [0,1], linestyle="--")
+        plt.xlabel("False Positive Rate")
+        plt.ylabel("True Positive Rate")
+        plt.title(f"ROC curve ({type_str})")
+        plt.tight_layout()
+        plt.savefig(f"logistic roc {type_str}.png")
+        plt.close()
+
         return acc, auc
 
 def neural(x_train, x_test, y_train, y_test, transform, model): #compare with best approach from prev qu.
@@ -105,9 +143,6 @@ def neural(x_train, x_test, y_train, y_test, transform, model): #compare with be
 
 def process_data(df):
     df.iloc[:, 0] = df.iloc[:, 0].replace({"M": 0, "F": 1, "I": 2})
-
-def regression_stats(xtrain, x_test, y_train, ytest):
-    return
 
 
 def main():
