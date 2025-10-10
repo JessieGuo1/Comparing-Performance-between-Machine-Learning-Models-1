@@ -5,7 +5,7 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.neural_network import MLPRegressor
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score 
+from sklearn.metrics import accuracy_score, roc_auc_score 
 
 import numpy as np
 
@@ -101,10 +101,14 @@ def neural(x_train, x_test, y_train, y_test, transform, model): #compare with be
 def process_data(df):
     df.iloc[:, 0] = df.iloc[:, 0].replace({"M": 0, "F": 1, "I": 2})
 
+def regression_stats(xtrain, x_test, y_train, ytest):
+    return
+
+
 def main():
     df = pd.read_csv('abalone.data', header=None, names=["sex", "length", "diameter", "height", "whole_weight", "shucked_weight", "viscera_weight", "shell_weight", "rings"])
     process_data(df)
-    gen_plots(df)
+    # gen_plots(df)
     print(df)
 
     rmse = np.zeros(NUM_EXPERIMENTS)
@@ -112,17 +116,31 @@ def main():
     acc = np.zeros(NUM_EXPERIMENTS)
     auc = np.zeros(NUM_EXPERIMENTS)
 
-    data_inputx = df[:, 0:8].values
-    data_inputy = df[:, -1].values
+    rmse_norm = np.zeros(NUM_EXPERIMENTS)
+    rsquared_norm = np.zeros(NUM_EXPERIMENTS)
+    acc_norm = np.zeros(NUM_EXPERIMENTS)
+    auc_norm = np.zeros(NUM_EXPERIMENTS)
+
+    data_inputx = df.iloc[:, 0:-1]
+    data_inputy = df.iloc[:, -1]
+    print(data_inputx)
+    print(data_inputy)
 
     for i in range(NUM_EXPERIMENTS):
         x_train, x_test, y_train, y_test = split_data(i, data_inputx, data_inputy)
-        rmse, rsquared = scipy_linear_mod(x_train, x_test, y_train, y_test, transform, 0)
-        acc, auc = scipy_linear_mod(x_train, x_test, y_train, y_test, transform, 1)
+        rmse, rsquared = scipy_linear_mod(x_train, x_test, y_train, y_test, False, 0)
+        acc, auc = scipy_linear_mod(x_train, x_test, y_train, y_test, False, 1)
         rmse[i] = rmse
         rsquared[i] = rsquared
         acc[i] = acc
         auc[i] = auc
+
+        rmse, rsquared = scipy_linear_mod(x_train, x_test, y_train, y_test, True, 0)
+        acc, auc = scipy_linear_mod(x_train, x_test, y_train, y_test, True, 1)
+        rmse_norm[i] = rmse
+        rsquared_norm[i] = rsquared
+        acc_norm[i] = acc
+        auc_norm[i] = auc
     
     print("RMSE_ALL: %.2f" %rmse)
     print("Rsquared: %.2f" %rsquared)
