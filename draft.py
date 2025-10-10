@@ -132,15 +132,20 @@ def scipy_linear_mod(x_train_real, x_test_real, y_train, y_test, transform, mode
 
         return acc, auc
 
-def neural(x_train, x_test, y_train, y_test, transform, model): #compare with best approach from prev qu.
-    if model == 0: 
-        mlp = MLPRegressor(hidden_layer_sizes=(3, ), activation='identity', solver='sgd', learning_rate_init = 0.001, max_iter=1000)
-        mlp.fit(x_train, y_train)
-    elif model == 1:
-        y_train[:, ] = np.where(y_train[:, ]>=7, 1, 0)
-        mlp = MLPClassifier(hidden_layer_sizes = (3, ), activation='logistic', solver='sgd', learning_rate_init = 0.001, max_iter=1000)
-        mlp.fit(x_train, y_train)
+def neural(x_train, x_test, y_train, y_test): #compare with best approach from prev qu.
+    transformer = Normalizer().fit(x_train.iloc[:,1:])
+    x_train.iloc[:, 1:] = transformer.transform(x_train.iloc[:, 1:])
+    x_test.iloc[:, 1:] = transformer.transform(x_test.iloc[:, 1:])
+  
+    mlp = MLPRegressor(hidden_layer_sizes=(3, ), activation='identity', solver='sgd', learning_rate_init = 0.001, max_iter=1000)
+    mlp.fit(x_train, y_train)
 
+    y_pred = mlp.predict(x_test)
+    rmse = np.sqrt(mean_squared_error(y_test, y_pred))
+    rsquared = r2_score(y_test, y_pred)
+
+    return rmse, rsquared
+  
 def process_data(df):
     df.iloc[:, 0] = df.iloc[:, 0].replace({"M": 0, "F": 1, "I": 2})
 
@@ -176,11 +181,24 @@ def main():
         acc_val, auc_val = scipy_linear_mod(x_train, x_test, y_train, y_test, True, 1)
         rmse_norm[i], rsquared_norm[i], acc_norm[i], auc_norm[i] = rmse_val, rsquared_val, acc_val, auc_val
     
-    print(f"RMSE no norm: {rmse.mean()}, with norm: {rmse_norm.mean()}")
-    print(f"RMSE no norm: {rsquared.mean()}, with norm: {rsquared_norm.mean()}")
-    print(f"RMSE no norm: {acc.mean()}, with norm: {acc_norm.mean()}")
-    print(f"RMSE no norm: {auc.mean()}, with norm: {auc_norm.mean()}")
+    print(f"RMSE no norm Mean: {rmse.mean()}, with norm: {rmse_norm.mean()}")
+    print(f"RMSE no norm SD: {rmse.sd()}, with norm: {rmse_norm.sd()}")
+
+    print(f"Rsquared no norm Mean: {rsquared.mean()}, with norm: {rsquared_norm.mean()}")
+    print(f"Rsquared no norm SD: {rsquared.sd()}, with norm: {rsquared_norm.sd()}")
+
+    print(f"Accuracy no norm Mean: {acc.mean()}, with norm: {acc_norm.mean()}")
+    print(f"Accuracy no norm SD: {acc.sd()} with norm: {acc_norm.sd()}")
+
+    print(f"AUC no norm Mean: {auc.mean()}, with norm: {auc_norm.mean()}")
+    print(f"AUC no norm SD: {auc.sd()} with norm: {auc_norm.sd()}")
     
+    print(f"RMSE of Neural Network Mean: {rmse_nn.mean()}")
+    print(f"RMSE of Neural Network SD: {rmse_nn.sd()}")
+    
+    print(f"Rsquared of Neural Network Mean: {rsquared_nn.mean()}")
+    print(f"Rsquared of Neural Network SD: {rsquared_nn.sd()}")
+
 #Ask about reporting for training set
 if __name__ =='__main__':
     main() 
