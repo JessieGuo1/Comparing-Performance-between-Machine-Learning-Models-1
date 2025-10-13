@@ -1,0 +1,90 @@
+from matplotlib import pyplot as plt
+from sklearn.preprocessing import MinMaxScaler
+from sklearn import datasets, linear_model
+from sklearn.neural_network import MLPClassifier
+from sklearn.neural_network import MLPRegressor
+from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, roc_auc_score 
+
+import numpy as np
+
+import pandas as pd
+from pandas import DataFrame
+import matplotlib.pyplot as plt
+
+def split_data(i, data_inputx, data_inputy):
+
+    x_train, x_test, y_train, y_test = train_test_split(data_inputx, data_inputy, test_size=0.4, random_state=i)
+
+    return x_train, x_test, y_train, y_test
+
+def neural(x_train, x_test, y_train, y_test, layers, learning): #compare with best approach from prev qu.
+    y_train_binary = (np.asarray(y_train) >= 7)
+    y_test_binary = (np.asarray(y_test) >= 7)
+    mlp = MLPClassifier(hidden_layer_sizes=layers, activation='logistic', solver='sgd', learning_rate_init = learning, max_iter=1000, random_state = 1)
+    mlp.fit(x_train, y_train_binary)
+
+    y_probs = mlp.predict_proba(x_test)[:, 1]
+    y_pred = (y_probs >= 0.5)
+    acc = accuracy_score(y_test_binary, y_pred)
+    auc = roc_auc_score(y_test_binary, y_probs)
+
+    return acc, auc
+
+def process_data(df):
+    df.iloc[:, 0] = df.iloc[:, 0].replace({"M": 0, "F": 1, "I": 2})
+
+def main():
+    df = pd.read_csv('abalone.data', header=None, names=["sex", "length", "diameter", "height", "whole_weight", "shucked_weight", "viscera_weight", "shell_weight", "rings"])
+    process_data(df)
+    data_inputx = df.iloc[:, 0:-1]
+    data_inputy = df.iloc[:, -1]
+
+    x_train, x_test, y_train, y_test = split_data(1, data_inputx, data_inputy)
+
+    transformer = MinMaxScaler().fit(x_train.iloc[:,1:])
+    x_train.iloc[:, 1:] = transformer.transform(x_train.iloc[:, 1:])
+    x_test.iloc[:, 1:] = transformer.transform(x_test.iloc[:, 1:])
+  
+    learning = np.array([0.001, 0.005, 0.01, 0.012, 0.015])
+
+    layers = [(10, ), (20, ), (30, ), 
+          (10, 10), (10, 20), (10, 30),
+          (16, 8), (20, 10),
+          (10, 10, 10), (10, 10, 10, 10)]
+
+    for j in layers:
+        acc_val = []
+        for i in learning:
+            try:
+                acc, auc = neural(x_train, x_test, y_train, y_test, j, i)
+            except Exception:
+                acc = np.nan
+            acc_val.append(acc)
+        plt.plot(learning, acc_val, linestyle='--', label=f'{j}')
+        
+    plt.xlabel('learning rate')
+    plt.ylabel('Accuracy')
+    plt.legend()
+    plt.savefig('trials_acc_learnrate.png')
+    plt.close()
+   
+    for j in layers:
+        auc_val = []
+        for i in learning:
+            try:
+                acc, auc = neural(x_train, x_test, y_train, y_test, j, i)
+            except Exception:
+                auc = np.nan
+            auc_val.append(auc)
+        plt.plot(learning, auc_val, linestyle='--', label=f'{j}')
+            
+    plt.xlabel('learning rate')
+    plt.ylabel('AUC')
+    plt.legend()
+    plt.savefig('trials_AUC_learnrate.png')
+    plt.close()  
+    
+if __name__ =='__main__':
+    main() 
