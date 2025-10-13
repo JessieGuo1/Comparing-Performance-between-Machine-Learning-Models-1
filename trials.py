@@ -20,7 +20,7 @@ def split_data(i, data_inputx, data_inputy):
     return x_train, x_test, y_train, y_test
 
 def neural(x_train, x_test, y_train, y_test, layers, learning): #compare with best approach from prev qu.
-    mlp = MLPRegressor(hidden_layer_sizes=layers, activation='identity', solver='sgd', learning_rate_init = learning, max_iter=1000)
+    mlp = MLPRegressor(hidden_layer_sizes=layers, activation='identity', solver='sgd', learning_rate_init = learning, random_state = 1, max_iter=1000)
     mlp.fit(x_train, y_train)
 
     y_pred = mlp.predict(x_test)
@@ -44,14 +44,12 @@ def main():
     x_train.iloc[:, 1:] = transformer.transform(x_train.iloc[:, 1:])
     x_test.iloc[:, 1:] = transformer.transform(x_test.iloc[:, 1:])
   
-    learning = np.array([0.0005, 0.001, 0.003, 0.005, 0.01])
+    learning = np.array([0.001, 0.005, 0.01, 0.012, 0.015])
 
     layers = [(10, ), (20, ), (30, ), 
           (10, 10), (10, 20), (10, 30),
-          (16, 8), (20, 10), (32, 16),
+          (16, 8), (20, 10),
           (10, 10, 10), (10, 10, 10, 10)]
-    
-    print(df.describe().T)
 
     for j in layers:
         rmse_val = []
@@ -61,7 +59,6 @@ def main():
             except Exception:
                 rmse = np.nan
             rmse_val.append(rmse)
-       
         plt.plot(learning, rmse_val, linestyle='--', label=f'{j}')
         
     plt.xlabel('learning rate')
