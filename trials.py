@@ -35,8 +35,6 @@ def process_data(df):
 def main():
     df = pd.read_csv('abalone.data', header=None, names=["sex", "length", "diameter", "height", "whole_weight", "shucked_weight", "viscera_weight", "shell_weight", "rings"])
     process_data(df)
-    # gen_plots(df)
-
     data_inputx = df.iloc[:, 0:-1]
     data_inputy = df.iloc[:, -1]
 
@@ -46,40 +44,46 @@ def main():
     x_train.iloc[:, 1:] = transformer.transform(x_train.iloc[:, 1:])
     x_test.iloc[:, 1:] = transformer.transform(x_test.iloc[:, 1:])
   
-    learning = np.arange(0.01, 0.1, 0.01)
+    learning = np.array([0.0005, 0.001, 0.003, 0.005, 0.01])
 
     layers = [(10, ), (20, ), (30, ), 
           (10, 10), (10, 20), (10, 30),
-          (10, 10), (20, 10), (30, 10),
-          (10, 10, 10), (10, 10, 10, 10), (10, 10, 10, 10, 10)]
+          (16, 8), (20, 10), (32, 16),
+          (10, 10, 10), (10, 10, 10, 10)]
     
     print(df.describe().T)
 
     for j in layers:
         rmse_val = []
         for i in learning:
-            rmse, rsquared = neural(x_train, x_test, y_train, y_test, j, i)
-            rmse_val = np.append(rmse_val, rmse)
+            try:
+                rmse, rsquared = neural(x_train, x_test, y_train, y_test, j, i)
+            except Exception:
+                rmse = np.nan
+            rmse_val.append(rmse)
        
         plt.plot(learning, rmse_val, linestyle='--', label=f'{j}')
         
     plt.xlabel('learning rate')
     plt.ylabel('RMSE')
     plt.legend()
-    plt.savefig('plot.png')
+    plt.savefig('trials_rmse_learnrate.png')
     plt.close()
    
     for j in layers:
         rsquared_val = []
         for i in learning:
-            rmse, rsquared = neural(x_train, x_test, y_train, y_test, j, i)
-            rsquared_val = np.append(rsquared_val, rsquared)
+            try:
+                rmse, rsquared = neural(x_train, x_test, y_train, y_test, j, i)
+            except Exception:
+                rsquared = np.nan
+            rsquared_val.append(rsquared)
         plt.plot(learning, rsquared_val, linestyle='--', label=f'{j}')
             
     plt.xlabel('learning rate')
     plt.ylabel('R^2')
     plt.legend()
-    plt.savefig('plot.png')
+    plt.savefig('trials_rsquared_learnrate.png')
     plt.close()  
     
 if __name__ =='__main__':
