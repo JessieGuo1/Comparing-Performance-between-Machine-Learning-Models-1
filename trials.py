@@ -70,12 +70,11 @@ def main():
     plt.close()
    
     for j in layers:
-          rsquared_val = []
-            for i in learning:
-                rmse, rsquared = neural(x_train, x_test, y_train, y_test, j, i)
-                rsquared_val = np.append(rsquared_val, rsquared)
-        
-            plt.plot(learning, rsquared_val, linestyle='--', label=f'{j}')
+        rsquared_val = []
+        for i in learning:
+            rmse, rsquared = neural(x_train, x_test, y_train, y_test, j, i)
+            rsquared_val = np.append(rsquared_val, rsquared)
+        plt.plot(learning, rsquared_val, linestyle='--', label=f'{j}')
             
     plt.xlabel('learning rate')
     plt.ylabel('R^2')
