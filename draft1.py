@@ -241,7 +241,7 @@ def neural(x_train_real, x_test_real, y_train, y_test, transform, model):
     type_str = "norm" if transform else "no_norm"
 
     if model == 0:
-        mlp = MLPRegressor(hidden_layer_sizes=(10, 20), activation='identity', solver='sgd', learning_rate_init = 0.01, max_iter=1000, random_state = 1)
+        mlp = MLPRegressor(hidden_layer_sizes=(16, 8), activation='identity', solver='sgd', learning_rate_init = 0.01, max_iter=1000, random_state = 1)
         mlp.fit(x_train, y_train)
 
         y_pred = mlp.predict(x_test)
@@ -275,9 +275,9 @@ def neural(x_train_real, x_test_real, y_train, y_test, transform, model):
         plt.plot(fpr, tpr); plt.plot([0,1], [0,1], linestyle="--")
         plt.xlabel("False Positive Rate")
         plt.ylabel("True Positive Rate")
-        plt.title(f"ROC curve Neural Network")
+        plt.title(f"ROC curve Neural Network ({type_str})")
         plt.tight_layout()
-        plt.savefig(f"logistic roc Neural Network.png")
+        plt.savefig(f"logistic roc Neural Network {type_str}.png")
         plt.close()
 
         return acc, auc, acc_train, auc_train
@@ -296,7 +296,7 @@ def neural_selected(x_train_real, x_test_real, y_train, y_test, transform, model
     type_str = "norm" if transform else "no_norm"
 
     if model == 0:
-        mlp = MLPRegressor(hidden_layer_sizes=(10, 20), activation='identity', solver='sgd', learning_rate_init = 0.01, max_iter=1000, random_state = 1)
+        mlp = MLPRegressor(hidden_layer_sizes=(16, 8), activation='identity', solver='sgd', learning_rate_init = 0.01, max_iter=1000, random_state = 1)
         mlp.fit(x_train[selected_feats], y_train)
 
         y_pred = mlp.predict(x_test[selected_feats])
@@ -470,23 +470,13 @@ def main():
         rmse_sel_norm[i], rsquared_sel_norm[i], acc_sel_norm[i], auc_sel_norm[i] = rmse_te, r2_te, acc_te, auc_te
         rmse_sel_norm_tr[i], rsquared_sel_norm_tr[i], acc_sel_norm_tr[i], auc_sel_norm_tr[i] = rmse_tr_i, r2_tr_i, acc_tr_i, auc_tr_i
 
-        try:
-            rmse_te, r2_te, rmse_tr_i, r2_tr_i = neural(x_train, x_test, y_train, y_test, False, 0)
-            acc_te, auc_te, acc_tr_i, auc_tr_i = neural(x_train, x_test, y_train, y_test, False, 1)
-        except Exception:
-            rmse_te, r2_te, rmse_tr_i, r2_tr_i = np.nan, np.nan, np.nan, np.nan
-            acc_te, auc_te, acc_tr_i, auc_tr_i = np.nan, np.nan, np.nan, np.nan
-
+        rmse_te, r2_te, rmse_tr_i, r2_tr_i = neural(x_train, x_test, y_train, y_test, False, 0)
+        acc_te, auc_te, acc_tr_i, auc_tr_i = neural(x_train, x_test, y_train, y_test, False, 1)
         rmse_nn[i], rsquared_nn[i], acc_nn[i], auc_nn[i] = rmse_te, r2_te, acc_te, auc_te
         rmse_nn_tr[i], rsquared_nn_tr[i], acc_nn_tr[i], auc_nn_tr[i] = rmse_tr_i, r2_tr_i, acc_tr_i, auc_tr_i
 
-        try:
-            rmse_te, r2_te, rmse_tr_i, r2_tr_i = neural(x_train, x_test, y_train, y_test, True, 0)
-            acc_te, auc_te, acc_tr_i, auc_tr_i = neural(x_train, x_test, y_train, y_test, True, 1)
-        except Exception:
-            rmse_te, r2_te, rmse_tr_i, r2_tr_i = np.nan, np.nan, np.nan, np.nan
-            acc_te, auc_te, acc_tr_i, auc_tr_i = np.nan, np.nan, np.nan, np.nan
-
+        rmse_te, r2_te, rmse_tr_i, r2_tr_i = neural(x_train, x_test, y_train, y_test, True, 0)
+        acc_te, auc_te, acc_tr_i, auc_tr_i = neural(x_train, x_test, y_train, y_test, True, 1)
         rmse_nn_norm[i], rsquared_nn_norm[i], acc_nn_norm[i], auc_nn_norm[i] = rmse_te, r2_te, acc_te, auc_te
         rmse_nn_norm_tr[i], rsquared_nn_norm_tr[i], acc_nn_norm_tr[i], auc_nn_norm_tr[i] = rmse_tr_i, r2_tr_i, acc_tr_i, auc_tr_i
 
@@ -500,86 +490,86 @@ def main():
         rmse_nn_sel_norm[i], rsquared_nn_sel_norm[i], acc_nn_sel_norm[i], auc_nn_sel_norm[i] = rmse_te, r2_te, acc_te, auc_te
         rmse_nn_sel_norm_tr[i], rsquared_nn_sel_norm_tr[i], acc_nn_sel_norm_tr[i], auc_nn_sel_norm_tr[i] = rmse_tr_i, r2_tr_i, acc_tr_i, auc_tr_i
 
-    print(f"RMSE no norm Mean: {rmse.mean()}, with norm: {rmse_norm.mean()}")
-    print(f"RMSE no norm SD: {rmse.std()}, with norm: {rmse_norm.std()}")
-    print(f"Rsquared no norm Mean: {rsquared.mean()}, with norm: {rsquared_norm.mean()}")
-    print(f"Rsquared no norm SD: {rsquared.std()}, with norm: {rsquared_norm.std()}")
+    print(f"RMSE no norm Mean: {rmse.mean():.3f}, with norm: {rmse_norm.mean():.3f}")
+    print(f"RMSE no norm SD: {rmse.std():.3f}, with norm: {rmse_norm.std():.3f}")
+    print(f"Rsquared no norm Mean: {rsquared.mean():.3f}, with norm: {rsquared_norm.mean():.3f}")
+    print(f"Rsquared no norm SD: {rsquared.std():.3f}, with norm: {rsquared_norm.std():.3f}")
 
-    print(f"Accuracy no norm Mean: {acc.mean()}, with norm: {acc_norm.mean()}")
-    print(f"Accuracy no norm SD: {acc.std()} with norm: {acc_norm.std()}")
-    print(f"AUC no norm Mean: {auc.mean()}, with norm: {auc_norm.mean()}")
-    print(f"AUC no norm SD: {auc.std()} with norm: {auc_norm.std()}")
+    print(f"Accuracy no norm Mean: {acc.mean():.3f}, with norm: {acc_norm.mean():.3f}")
+    print(f"Accuracy no norm SD: {acc.std():.3f} with norm: {acc_norm.std():.3f}")
+    print(f"AUC no norm Mean: {auc.mean():.3f}, with norm: {auc_norm.mean():.3f}")
+    print(f"AUC no norm SD: {auc.std():.3f} with norm: {auc_norm.std():.3f}")
     
-    print(f"RMSE of Selected Features no norm Mean: {rmse_sel.mean()}, with norm: {rmse_sel_norm.mean()}")
-    print(f"RMSE of Selected Features no norm SD: {rmse_sel.std()}, with norm: {rmse_sel_norm.std()}")
-    print(f"Rsquared of Selected Features no norm Mean: {rsquared_sel.mean()}, with norm: {rsquared_sel_norm.mean()}")
-    print(f"Rsquared of Selected Features no norm SD: {rsquared_sel.std()}, with norm: {rsquared_sel_norm.std()}")
+    print(f"RMSE of Selected Features no norm Mean: {rmse_sel.mean():.3f}, with norm: {rmse_sel_norm.mean():.3f}")
+    print(f"RMSE of Selected Features no norm SD: {rmse_sel.std():.3f}, with norm: {rmse_sel_norm.std():.3f}")
+    print(f"Rsquared of Selected Features no norm Mean: {rsquared_sel.mean():.3f}, with norm: {rsquared_sel_norm.mean():.3f}")
+    print(f"Rsquared of Selected Features no norm SD: {rsquared_sel.std():.3f}, with norm: {rsquared_sel_norm.std():.3f}")
 
-    print(f"Accuracy of Selected Features no norm Mean: {acc_sel.mean()}, with norm: {acc_sel_norm.mean()}")
-    print(f"Accuracy of Selected Features no norm SD: {acc_sel.std()}, with norm: {acc_sel_norm.std()}")
-    print(f"AUC of Selected Features no norm Mean: {auc_sel.mean()}, with norm: {acc_sel_norm.mean()}")
-    print(f"AUC of Selected Features no norm SD: {auc_sel.std()}, with norm: {acc_sel_norm.std()}")
+    print(f"Accuracy of Selected Features no norm Mean: {acc_sel.mean():.3f}, with norm: {acc_sel_norm.mean():.3f}")
+    print(f"Accuracy of Selected Features no norm SD: {acc_sel.std():.3f}, with norm: {acc_sel_norm.std():.3f}")
+    print(f"AUC of Selected Features no norm Mean: {auc_sel.mean():.3f}, with norm: {auc_sel_norm.mean():.3f}")
+    print(f"AUC of Selected Features no norm SD: {auc_sel.std():.3f}, with norm: {auc_sel_norm.std():.3f}")
     
-    print(f"RMSE of Neural Network no norm Mean: {rmse_nn.mean()}, with norm: {rmse_nn_norm.mean()}")
-    print(f"RMSE of Neural Network no norm SD: {rmse_nn.std()}, with norm: {rmse_nn_norm.std()}")
-    print(f"Rsquared of Neural Network no norm Mean: {rsquared_nn.mean()}, with norm: {rsquared_nn_norm.mean()}")
-    print(f"Rsquared of Neural Network no norm SD: {rsquared_nn.std()}, with norm: {rsquared_nn_norm.std()}")
+    print(f"RMSE of Neural Network no norm Mean: {rmse_nn.mean():.3f}, with norm: {rmse_nn_norm.mean():.3f}")
+    print(f"RMSE of Neural Network no norm SD: {rmse_nn.std():.3f}, with norm: {rmse_nn_norm.std():.3f}")
+    print(f"Rsquared of Neural Network no norm Mean: {rsquared_nn.mean():.3f}, with norm: {rsquared_nn_norm.mean():.3f}")
+    print(f"Rsquared of Neural Network no norm SD: {rsquared_nn.std():.3f}, with norm: {rsquared_nn_norm.std():.3f}")
  
-    print(f"Accuracy of Neural Network no norm Mean: {acc_nn.mean()}, with norm: {acc_nn_norm.mean()}")
-    print(f"Accuracy of Neural Network no norm SD: {acc_nn.std()}, with norm: {acc_nn_norm.std()}")
-    print(f"AUC of Neural Network no norm Mean: {auc_nn.mean()}, with norm: {acc_nn_norm.mean()}")
-    print(f"AUC of Neural Network no norm SD: {auc_nn.std()}, with norm: {acc_nn_norm.std()}")
+    print(f"Accuracy of Neural Network no norm Mean: {acc_nn.mean():.3f}, with norm: {acc_nn_norm.mean():.3f}")
+    print(f"Accuracy of Neural Network no norm SD: {acc_nn.std():.3f}, with norm: {acc_nn_norm.std():.3f}")
+    print(f"AUC of Neural Network no norm Mean: {auc_nn.mean():.3f}, with norm: {auc_nn_norm.mean():.3f}")
+    print(f"AUC of Neural Network no norm SD: {auc_nn.std():.3f}, with norm: {auc_nn_norm.std():.3f}")
  
-    print(f"RMSE of Neural Network Selected Features no norm Mean: {rmse_nn_sel.mean()}, with norm: {rmse_nn_sel_norm.mean()}")
-    print(f"RMSE of Neural Network Selected Features no norm SD: {rmse_nn_sel.std()}, with norm: {rmse_nn_sel_norm.std()}")
-    print(f"Rsquared of Neural Selected Features Network no norm Mean: {rsquared_nn_sel.mean()}, with norm: {rsquared_nn_sel_norm.mean()}")
-    print(f"Rsquared of Neural Network Selected Features no norm SD: {rsquared_nn_sel.std()}, with norm: {rsquared_nn_sel_norm.std()}")
+    print(f"RMSE of Neural Network Selected Features no norm Mean: {rmse_nn_sel.mean():.3f}, with norm: {rmse_nn_sel_norm.mean():.3f}")
+    print(f"RMSE of Neural Network Selected Features no norm SD: {rmse_nn_sel.std():.3f}, with norm: {rmse_nn_sel_norm.std():.3f}")
+    print(f"Rsquared of Neural Selected Features Network no norm Mean: {rsquared_nn_sel.mean():.3f}, with norm: {rsquared_nn_sel_norm.mean():.3f}")
+    print(f"Rsquared of Neural Network Selected Features no norm SD: {rsquared_nn_sel.std():.3f}, with norm: {rsquared_nn_sel_norm.std():.3f}")
 
-    print(f"Accuracy of Neural Network Selected Features no norm Mean: {acc_nn_sel.mean()}, with norm: {acc_nn_sel_norm.mean()}")
-    print(f"Accuracy of Neural Network Selected Features no norm SD: {acc_nn_sel.std()}, with norm: {acc_nn_sel_norm.std()}")
-    print(f"AUC of Neural Network Selected Features no norm Mean: {auc_nn_sel.mean()}, with norm: {auc_nn_sel_norm.mean()}")
-    print(f"AUC of Neural Network Selected Features no norm SD: {auc_nn_sel.std()}, with norm: {auc_nn_sel_norm.std()}")
+    print(f"Accuracy of Neural Network Selected Features no norm Mean: {acc_nn_sel.mean():.3f}, with norm: {acc_nn_sel_norm.mean():.3f}")
+    print(f"Accuracy of Neural Network Selected Features no norm SD: {acc_nn_sel.std():.3f}, with norm: {acc_nn_sel_norm.std():.3f}")
+    print(f"AUC of Neural Network Selected Features no norm Mean: {auc_nn_sel.mean():.3f}, with norm: {auc_nn_sel_norm.mean():.3f}")
+    print(f"AUC of Neural Network Selected Features no norm SD: {auc_nn_sel.std():.3f}, with norm: {auc_nn_sel_norm.std():.3f}")
  
 
-    print(f"TRAIN RMSE no norm Mean: {rmse_tr.mean()}, with norm: {rmse_norm_tr.mean()}")
-    print(f"TRAIN RMSE no norm SD: {rmse_tr.std()}, with norm: {rmse_norm_tr.std()}")
-    print(f"TRAIN Rsquared no norm Mean: {rsquared_tr.mean()}, with norm: {rsquared_norm_tr.mean()}")
-    print(f"TRAIN Rsquared no norm SD: {rsquared_tr.std()}, with norm: {rsquared_norm_tr.std()}")
+    print(f"TRAIN RMSE no norm Mean: {rmse_tr.mean():.3f}, with norm: {rmse_norm_tr.mean():.3f}")
+    print(f"TRAIN RMSE no norm SD: {rmse_tr.std():.3f}, with norm: {rmse_norm_tr.std():.3f}")
+    print(f"TRAIN Rsquared no norm Mean: {rsquared_tr.mean():.3f}, with norm: {rsquared_norm_tr.mean():.3f}")
+    print(f"TRAIN Rsquared no norm SD: {rsquared_tr.std():.3f}, with norm: {rsquared_norm_tr.std():.3f}")
 
-    print(f"TRAIN Accuracy no norm Mean: {acc_tr.mean()}, with norm: {acc_norm_tr.mean()}")
-    print(f"TRAIN Accuracy no norm SD: {acc_tr.std()} with norm: {acc_norm_tr.std()}")
-    print(f"TRAIN AUC no norm Mean: {auc_tr.mean()}, with norm: {auc_norm_tr.mean()}")
-    print(f"TRAIN AUC no norm SD: {auc_tr.std()} with norm: {auc_norm_tr.std()}")
+    print(f"TRAIN Accuracy no norm Mean: {acc_tr.mean():.3f}, with norm: {acc_norm_tr.mean():.3f}")
+    print(f"TRAIN Accuracy no norm SD: {acc_tr.std():.3f} with norm: {acc_norm_tr.std():.3f}")
+    print(f"TRAIN AUC no norm Mean: {auc_tr.mean():.3f}, with norm: {auc_norm_tr.mean():.3f}")
+    print(f"TRAIN AUC no norm SD: {auc_tr.std():.3f} with norm: {auc_norm_tr.std():.3f}")
 
-    print(f"TRAIN RMSE of Selected Features no norm Mean: {rmse_sel_tr.mean()}, with norm: {rmse_sel_norm_tr.mean()}")
-    print(f"TRAIN RMSE of Selected Features no norm SD: {rmse_sel_tr.std()}, with norm: {rmse_sel_norm_tr.std()}")
-    print(f"TRAIN Rsquared of Selected Features no norm Mean: {rsquared_sel_tr.mean()}, with norm: {rsquared_sel_norm_tr.mean()}")
-    print(f"TRAIN Rsquared of Selected Features no norm SD: {rsquared_sel_tr.std()}, with norm: {rsquared_sel_norm_tr.std()}")
+    print(f"TRAIN RMSE of Selected Features no norm Mean: {rmse_sel_tr.mean():.3f}, with norm: {rmse_sel_norm_tr.mean():.3f}")
+    print(f"TRAIN RMSE of Selected Features no norm SD: {rmse_sel_tr.std():.3f}, with norm: {rmse_sel_norm_tr.std():.3f}")
+    print(f"TRAIN Rsquared of Selected Features no norm Mean: {rsquared_sel_tr.mean():.3f}, with norm: {rsquared_sel_norm_tr.mean():.3f}")
+    print(f"TRAIN Rsquared of Selected Features no norm SD: {rsquared_sel_tr.std():.3f}, with norm: {rsquared_sel_norm_tr.std():.3f}")
 
-    print(f"TRAIN Accuracy of Selected Features no norm Mean: {acc_sel_tr.mean()}, with norm: {acc_sel_norm_tr.mean()}")
-    print(f"TRAIN Accuracy of Selected Features no norm SD: {acc_sel_tr.std()}, with norm: {acc_sel_norm_tr.std()}")
-    print(f"TRAIN AUC of Selected Features no norm Mean: {auc_sel_tr.mean()}, with norm: {auc_sel_norm_tr.mean()}")
-    print(f"TRAIN AUC of Selected Features no norm SD: {auc_sel_tr.std()}, with norm: {auc_sel_norm_tr.std()}")
+    print(f"TRAIN Accuracy of Selected Features no norm Mean: {acc_sel_tr.mean():.3f}, with norm: {acc_sel_norm_tr.mean():.3f}")
+    print(f"TRAIN Accuracy of Selected Features no norm SD: {acc_sel_tr.std():.3f}, with norm: {acc_sel_norm_tr.std():.3f}")
+    print(f"TRAIN AUC of Selected Features no norm Mean: {auc_sel_tr.mean():.3f}, with norm: {auc_sel_norm_tr.mean():.3f}")
+    print(f"TRAIN AUC of Selected Features no norm SD: {auc_sel_tr.std():.3f}, with norm: {auc_sel_norm_tr.std():.3f}")
 
-    print(f"TRAIN RMSE of Neural Network Mean: {rmse_nn_tr.mean()}, with norm: {rmse_nn_norm_tr.mean()}")
-    print(f"TRAIN RMSE of Neural Network SD: {rmse_nn_tr.std()}, with norm: {rmse_nn_norm_tr.std()}")
-    print(f"TRAIN Rsquared of Neural Network Mean: {rsquared_nn_tr.mean()}, with norm: {rsquared_nn_norm_tr.mean()}")
-    print(f"TRAIN Rsquared of Neural Network SD: {rsquared_nn_tr.std()}, with norm: {rsquared_nn_norm_tr.std()}")
+    print(f"TRAIN RMSE of Neural Network Mean: {rmse_nn_tr.mean():.3f}, with norm: {rmse_nn_norm_tr.mean():.3f}")
+    print(f"TRAIN RMSE of Neural Network SD: {rmse_nn_tr.std():.3f}, with norm: {rmse_nn_norm_tr.std():.3f}")
+    print(f"TRAIN Rsquared of Neural Network Mean: {rsquared_nn_tr.mean():.3f}, with norm: {rsquared_nn_norm_tr.mean():.3f}")
+    print(f"TRAIN Rsquared of Neural Network SD: {rsquared_nn_tr.std():.3f}, with norm: {rsquared_nn_norm_tr.std():.3f}")
 
-    print(f"TRAIN Accuracy of Neural Network no norm Mean: {acc_nn_tr.mean()}, with norm: {acc_nn_norm_tr.mean()}")
-    print(f"TRAIN Accuracy of Neural Network no norm SD: {acc_nn_tr.std()}, with norm: {acc_nn_norm_tr.std()}")
-    print(f"TRAIN AUC of Neural Network no norm Mean: {auc_nn_tr.mean()}, with norm: {acc_nn_norm_tr.mean()}")
-    print(f"TRAIN AUC of Neural Network no norm SD: {auc_nn_tr.std()}, with norm: {acc_nn_norm_tr.std()}")
+    print(f"TRAIN Accuracy of Neural Network no norm Mean: {acc_nn_tr.mean():.3f}, with norm: {acc_nn_norm_tr.mean():.3f}")
+    print(f"TRAIN Accuracy of Neural Network no norm SD: {acc_nn_tr.std():.3f}, with norm: {acc_nn_norm_tr.std():.3f}")
+    print(f"TRAIN AUC of Neural Network no norm Mean: {auc_nn_tr.mean():.3f}, with norm: {auc_nn_norm_tr.mean():.3f}")
+    print(f"TRAIN AUC of Neural Network no norm SD: {auc_nn_tr.std():.3f}, with norm: {auc_nn_norm_tr.std():.3f}")
  
-    print(f"TRAIN RMSE of Neural Network Selected Features no norm Mean: {rmse_nn_sel_tr.mean()}, with norm: {rmse_nn_sel_norm_tr.mean()}")
-    print(f"TRAIN RMSE of Neural Network Selected Features no norm SD: {rmse_nn_sel_tr.std()}, with norm: {rmse_nn_sel_norm_tr.std()}")
-    print(f"TRAIN Rsquared of Neural Selected Features Network no norm Mean: {rsquared_nn_sel_tr.mean()}, with norm: {rsquared_nn_sel_norm_tr.mean()}")
-    print(f"TRAIN Rsquared of Neural Network Selected Features no norm SD: {rsquared_nn_sel_tr.std()}, with norm: {rsquared_nn_sel_norm_tr.std()}")
+    print(f"TRAIN RMSE of Neural Network Selected Features no norm Mean: {rmse_nn_sel_tr.mean():.3f}, with norm: {rmse_nn_sel_norm_tr.mean():.3f}")
+    print(f"TRAIN RMSE of Neural Network Selected Features no norm SD: {rmse_nn_sel_tr.std():.3f}, with norm: {rmse_nn_sel_norm_tr.std():.3f}")
+    print(f"TRAIN Rsquared of Neural Selected Features Network no norm Mean: {rsquared_nn_sel_tr.mean():.3f}, with norm: {rsquared_nn_sel_norm_tr.mean():.3f}")
+    print(f"TRAIN Rsquared of Neural Network Selected Features no norm SD: {rsquared_nn_sel_tr.std():.3f}, with norm: {rsquared_nn_sel_norm_tr.std():.3f}")
    
-    print(f"TRAIN Accuracy of Neural Network Selected Features no norm Mean: {acc_nn_sel_tr.mean()}, with norm: {acc_nn_sel_norm_tr.mean()}")
-    print(f"TRAIN Accuracy of Neural Network Selected Features no norm SD: {acc_nn_sel_tr.std()}, with norm: {acc_nn_sel_norm_tr.std()}")
-    print(f"TRAIN AUC of Neural Network Selected Features no norm Mean: {auc_nn_sel_tr.mean()}, with norm: {auc_nn_sel_norm_tr.mean()}")
-    print(f"TRAIN AUC of Neural Network Selected Features no norm SD: {auc_nn_sel_tr.std()}, with norm: {auc_nn_sel_norm_tr.std()}")
+    print(f"TRAIN Accuracy of Neural Network Selected Features no norm Mean: {acc_nn_sel_tr.mean():.3f}, with norm: {acc_nn_sel_norm_tr.mean():.3f}")
+    print(f"TRAIN Accuracy of Neural Network Selected Features no norm SD: {acc_nn_sel_tr.std():.3f}, with norm: {acc_nn_sel_norm_tr.std():.3f}")
+    print(f"TRAIN AUC of Neural Network Selected Features no norm Mean: {auc_nn_sel_tr.mean():.3f}, with norm: {auc_nn_sel_norm_tr.mean():.3f}")
+    print(f"TRAIN AUC of Neural Network Selected Features no norm SD: {auc_nn_sel_tr.std():.3f}, with norm: {auc_nn_sel_norm_tr.std():.3f}")
  
 
 if __name__ =='__main__':

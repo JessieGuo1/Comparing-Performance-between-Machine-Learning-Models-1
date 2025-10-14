@@ -6,6 +6,8 @@ from sklearn.neural_network import MLPRegressor
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, roc_auc_score 
+from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import OneHotEncoder
 
 import numpy as np
 
@@ -30,19 +32,34 @@ def neural(x_train, x_test, y_train, y_test, layers, learning): #compare with be
     return rmse, rsquared
 
 def process_data(df):
-    df.iloc[:, 0] = df.iloc[:, 0].replace({"M": 0, "F": 1, "I": 2})
+    values = np.array(df.iloc[:, 0])
+    # integer encode
+    label_encoder = LabelEncoder()
+    integer_encoded = label_encoder.fit_transform(values)
+    print(integer_encoded)
+    # binary encode
+    onehot_encoder = OneHotEncoder(sparse_output=False)
+    integer_encoded = integer_encoded.reshape(len(integer_encoded), 1)
+    onehot_encoded = onehot_encoder.fit_transform(integer_encoded)
+    onehot_encoded = pd.DataFrame(onehot_encoded, columns = ["F", "I", "M"])
+    print(onehot_encoded)
+    df = df.drop(columns = "sex")
+    df = pd.concat([onehot_encoded, df], axis=1)
+
+    return df
 
 def main():
     df = pd.read_csv('abalone.data', header=None, names=["sex", "length", "diameter", "height", "whole_weight", "shucked_weight", "viscera_weight", "shell_weight", "rings"])
-    process_data(df)
+    df = process_data(df)
+
     data_inputx = df.iloc[:, 0:-1]
     data_inputy = df.iloc[:, -1]
 
     x_train, x_test, y_train, y_test = split_data(1, data_inputx, data_inputy)
 
-    transformer = MinMaxScaler().fit(x_train.iloc[:,1:])
-    x_train.iloc[:, 1:] = transformer.transform(x_train.iloc[:, 1:])
-    x_test.iloc[:, 1:] = transformer.transform(x_test.iloc[:, 1:])
+    transformer = MinMaxScaler().fit(x_train.iloc[:,3:])
+    x_train.iloc[:, 3:] = transformer.transform(x_train.iloc[:, 3:])
+    x_test.iloc[:, 3:] = transformer.transform(x_test.iloc[:, 3:])
   
     learning = np.array([0.001, 0.005, 0.01, 0.012, 0.015])
 
