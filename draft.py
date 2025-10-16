@@ -69,9 +69,10 @@ def scipy_linear_mod(x_train_real, x_test_real, y_train, y_test, transform, mode
     if transform == True:
         x_train = x_train_real.copy()
         x_test = x_test_real.copy()
-        transformer = MinMaxScaler().fit(x_train.iloc[:,3:])
-        x_train.iloc[:, 3:] = transformer.transform(x_train.iloc[:, 3:])
+        transformer = MinMaxScaler()
+        x_train.iloc[:, 3:] = transformer.fit_transform(x_train.iloc[:, 3:])
         x_test.iloc[:, 3:] = transformer.transform(x_test.iloc[:, 3:])
+
     else:
         x_train = x_train_real
         x_test = x_test_real
@@ -126,12 +127,14 @@ def scipy_linear_mod(x_train_real, x_test_real, y_train, y_test, transform, mode
 
         y_probs = regr.predict_proba(x_test)[:, 1]
         y_pred = (y_probs >= 0.5)
-        acc = accuracy_score(y_test_binary, y_pred)
+        ypred = regr.predict(x_test)
+        acc = accuracy_score(y_test_binary, ypred)
         auc = roc_auc_score(y_test_binary, y_probs)
 
         y_probs_train = regr.predict_proba(x_train)[:, 1]
         y_pred_train  = (y_probs_train >= 0.5)
-        acc_train = accuracy_score(y_train_binary, y_pred_train)
+        ypred_train = regr.predict(x_train)
+        acc_train = accuracy_score(y_train_binary, ypred_train)
         auc_train = roc_auc_score(y_train_binary, y_probs_train)
 
         fpr, tpr, thresh = roc_curve(y_test_binary, y_probs)
@@ -150,8 +153,8 @@ def selected(x_train_real, x_test_real, y_train, y_test, transform, model, selec
     if transform == True:
         x_train = x_train_real.copy()
         x_test = x_test_real.copy()
-        transformer = MinMaxScaler().fit(x_train.iloc[:, 3:])
-        x_train.iloc[:, 3:] = transformer.transform(x_train.iloc[:, 3:])
+        transformer = MinMaxScaler()
+        x_train.iloc[:, 3:] = transformer.fit_transform(x_train.iloc[:, 3:])
         x_test.iloc[:, 3:] = transformer.transform(x_test.iloc[:, 3:])
     else:
         x_train = x_train_real
@@ -207,12 +210,14 @@ def selected(x_train_real, x_test_real, y_train, y_test, transform, model, selec
 
         y_probs = regr.predict_proba(x_test[selected_feats])[:, 1]
         y_pred = (y_probs >= 0.5)
-        acc = accuracy_score(y_test_binary, y_pred)
+        ypred = regr.predict(x_test[selected_feats])
+        acc = accuracy_score(y_test_binary, ypred)
         auc = roc_auc_score(y_test_binary, y_probs)
 
         y_probs_train = regr.predict_proba(x_train[selected_feats])[:, 1]
         y_pred_train = (y_probs_train >= 0.5)
-        acc_train = accuracy_score(y_train_binary, y_pred_train)
+        ypred_train = regr.predict(x_train[selected_feats])
+        acc_train = accuracy_score(y_train_binary, ypred_train)
         auc_train = roc_auc_score(y_train_binary, y_probs_train)
 
         fpr, tpr, thresh = roc_curve(y_test_binary, y_probs)
@@ -231,8 +236,8 @@ def neural(x_train_real, x_test_real, y_train, y_test, transform, model):
     if transform == True:
         x_train = x_train_real.copy()
         x_test = x_test_real.copy()
-        transformer = MinMaxScaler().fit(x_train.iloc[:, 3:])
-        x_train.iloc[:, 3:] = transformer.transform(x_train.iloc[:, 3:])
+        transformer = MinMaxScaler()
+        x_train.iloc[:, 3:] = transformer.fit_transform(x_train.iloc[:, 3:])
         x_test.iloc[:, 3:] = transformer.transform(x_test.iloc[:, 3:])
     else:
         x_train = x_train_real
@@ -257,17 +262,19 @@ def neural(x_train_real, x_test_real, y_train, y_test, transform, model):
     elif model == 1:
         y_train_binary = (np.asarray(y_train) >= 7)
         y_test_binary = (np.asarray(y_test) >= 7)
-        mlp = MLPClassifier(hidden_layer_sizes=(30, ), activation='logistic', solver='sgd', learning_rate_init = 0.012, max_iter=1000, random_state = 1)
+        mlp = MLPClassifier(hidden_layer_sizes=(20, ), activation='logistic', solver='sgd', learning_rate_init = 0.015, max_iter=1000, random_state = 1)
         mlp.fit(x_train, y_train_binary)
 
         y_probs = mlp.predict_proba(x_test)[:, 1]
         y_pred = (y_probs >= 0.5)
-        acc = accuracy_score(y_test_binary, y_pred)
+        ypred = mlp.predict(x_test)
+        acc = accuracy_score(y_test_binary, ypred)
         auc = roc_auc_score(y_test_binary, y_probs)
 
         y_probs_train = mlp.predict_proba(x_train)[:, 1]
         y_pred_train = (y_probs_train >= 0.5)
-        acc_train = accuracy_score(y_train_binary, y_pred_train)
+        ypred_train = mlp.predict(x_train)
+        acc_train = accuracy_score(y_train_binary, ypred_train)
         auc_train = roc_auc_score(y_train_binary, y_probs_train)
 
         fpr, tpr, thresh = roc_curve(y_test_binary, y_probs)
@@ -286,8 +293,8 @@ def neural_selected(x_train_real, x_test_real, y_train, y_test, transform, model
     if transform == True:
         x_train = x_train_real.copy()
         x_test = x_test_real.copy()
-        transformer = MinMaxScaler().fit(x_train.iloc[:, 3:])
-        x_train.iloc[:, 3:] = transformer.transform(x_train.iloc[:, 3:])
+        transformer = MinMaxScaler()
+        x_train.iloc[:, 3:] = transformer.fit_transform(x_train.iloc[:, 3:])
         x_test.iloc[:, 3:] = transformer.transform(x_test.iloc[:, 3:])
     else:
         x_train = x_train_real
@@ -312,17 +319,19 @@ def neural_selected(x_train_real, x_test_real, y_train, y_test, transform, model
     elif model == 1:
         y_train_binary = (np.asarray(y_train) >= 7)
         y_test_binary = (np.asarray(y_test) >= 7) # note this is y true
-        mlp = MLPClassifier(hidden_layer_sizes=(30, ), activation='logistic', solver='sgd', learning_rate_init = 0.012, max_iter=1000, random_state = 1)
+        mlp = MLPClassifier(hidden_layer_sizes=(20, ), activation='logistic', solver='sgd', learning_rate_init = 0.015, max_iter=1000, random_state = 1)
         mlp.fit(x_train[selected_feats], y_train_binary)
 
         y_probs = mlp.predict_proba(x_test[selected_feats])[:, 1]
         y_pred = (y_probs >= 0.5)
-        acc = accuracy_score(y_test_binary, y_pred)
+        ypred = mlp.predict(x_test[selected_feats])
+        acc = accuracy_score(y_test_binary, ypred)
         auc = roc_auc_score(y_test_binary, y_probs)
 
         y_probs_train = mlp.predict_proba(x_train[selected_feats])[:, 1]
         y_pred_train = (y_probs_train >= 0.5)
-        acc_train = accuracy_score(y_train_binary, y_pred_train)
+        ypred_train = mlp.predict(x_train[selected_feats])
+        acc_train = accuracy_score(y_train_binary, ypred_train)
         auc_train = roc_auc_score(y_train_binary, y_probs_train)
 
         fpr, tpr, thresh = roc_curve(y_test_binary, y_probs)
@@ -563,7 +572,7 @@ def main():
  
     print(f"TRAIN RMSE of Neural Network Selected Features no norm Mean: {rmse_nn_sel_tr.mean():.3f}, with norm: {rmse_nn_sel_norm_tr.mean():.3f}")
     print(f"TRAIN RMSE of Neural Network Selected Features no norm SD: {rmse_nn_sel_tr.std():.3f}, with norm: {rmse_nn_sel_norm_tr.std():.3f}")
-    print(f"TRAIN Rsquared of Neural Selected Features Network no norm Mean: {rsquared_nn_sel_tr.mean():.3f}, with norm: {rsquared_nn_sel_norm_tr.mean():.3f}")
+    print(f"TRAIN Rsquared of Neural Network Selected Features no norm Mean: {rsquared_nn_sel_tr.mean():.3f}, with norm: {rsquared_nn_sel_norm_tr.mean():.3f}")
     print(f"TRAIN Rsquared of Neural Network Selected Features no norm SD: {rsquared_nn_sel_tr.std():.3f}, with norm: {rsquared_nn_sel_norm_tr.std():.3f}")
    
     print(f"TRAIN Accuracy of Neural Network Selected Features no norm Mean: {acc_nn_sel_tr.mean():.3f}, with norm: {acc_nn_sel_norm_tr.mean():.3f}")

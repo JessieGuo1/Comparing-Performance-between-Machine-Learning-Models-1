@@ -57,8 +57,8 @@ def main():
 
     x_train, x_test, y_train, y_test = split_data(1, data_inputx, data_inputy)
 
-    transformer = MinMaxScaler().fit(x_train.iloc[:,3:])
-    x_train.iloc[:, 3:] = transformer.transform(x_train.iloc[:, 3:])
+    transformer = MinMaxScaler()
+    x_train.iloc[:, 3:] = transformer.fit_transform(x_train.iloc[:, 3:])
     x_test.iloc[:, 3:] = transformer.transform(x_test.iloc[:, 3:])
   
     learning = np.array([0.001, 0.005, 0.01, 0.012, 0.015])
