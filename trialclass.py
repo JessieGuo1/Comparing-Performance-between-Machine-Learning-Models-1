@@ -65,7 +65,7 @@ def main():
     x_train.iloc[:, 3:] = transformer.fit_transform(x_train.iloc[:, 3:])
     x_test.iloc[:, 3:] = transformer.transform(x_test.iloc[:, 3:])
   
-    learning = np.array([0.001, 0.005, 0.01, 0.012, 0.015, 0.017])
+    learning = np.array([0.001, 0.005, 0.01, 0.012, 0.015])
 
     layers = [(10, ), (20, ), (30, ), 
           (10, 10), (10, 20), (10, 30),
