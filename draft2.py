@@ -16,7 +16,7 @@ import pandas as pd
 from pandas import DataFrame
 import matplotlib.pyplot as plt
 
-NUM_EXPERIMENTS = 20
+NUM_EXPERIMENTS = 2
 
 def scatter(df, feature, target):
     plt.figure()
@@ -346,6 +346,122 @@ def neural_selected(x_train_real, x_test_real, y_train, y_test, transform, model
 
         return acc, auc, acc_train, auc_train
 
+def neural_relu(x_train_real, x_test_real, y_train, y_test, transform, model):
+    if transform == True:
+        x_train = x_train_real.copy()
+        x_test = x_test_real.copy()
+        transformer = MinMaxScaler()
+        x_train.iloc[:, 3:] = transformer.fit_transform(x_train.iloc[:, 3:])
+        x_test.iloc[:, 3:] = transformer.transform(x_test.iloc[:, 3:])
+    else:
+        x_train = x_train_real
+        x_test = x_test_real
+
+    type_str = "norm" if transform else "no_norm"
+
+    if model == 0:
+        # Regression with Relu hidden layers
+        mlp = MLPRegressor(hidden_layer_sizes=(16, 8), activation='relu', solver='sgd',
+                           learning_rate_init=0.01, max_iter=1000, random_state=1)
+        mlp.fit(x_train, y_train)
+
+        y_pred = mlp.predict(x_test)
+        rmse = np.sqrt(mean_squared_error(y_test, y_pred))
+        rsquared = r2_score(y_test, y_pred)
+
+        y_pred_train = mlp.predict(x_train)
+        rmse_train = np.sqrt(mean_squared_error(y_train, y_pred_train))
+        rsquared_train = r2_score(y_train, y_pred_train)
+
+        return rmse, rsquared, rmse_train, rsquared_train
+
+    elif model == 1:
+        y_train_binary = (np.asarray(y_train) >= 7)
+        y_test_binary = (np.asarray(y_test) >= 7)
+        mlp = MLPClassifier(hidden_layer_sizes=(10, 10), activation='relu', solver='sgd',
+                            learning_rate_init=0.003, max_iter=1000, random_state=1)
+        mlp.fit(x_train, y_train_binary)
+
+        y_probs = mlp.predict_proba(x_test)[:, 1]
+        ypred = mlp.predict(x_test)
+        acc = accuracy_score(y_test_binary, ypred)
+        auc = roc_auc_score(y_test_binary, y_probs)
+
+        y_probs_train = mlp.predict_proba(x_train)[:, 1]
+        ypred_train = mlp.predict(x_train)
+        acc_train = accuracy_score(y_train_binary, ypred_train)
+        auc_train = roc_auc_score(y_train_binary, y_probs_train)
+
+        fpr, tpr, thresh = roc_curve(y_test_binary, y_probs)
+        plt.figure()
+        plt.plot(fpr, tpr); plt.plot([0,1], [0,1], linestyle="--")
+        plt.xlabel("False Positive Rate")
+        plt.ylabel("True Positive Rate")
+        plt.title(f"ROC curve Neural Network ReLU ({type_str})")
+        plt.tight_layout()
+        plt.savefig(f"logistic roc Neural Network ReLU {type_str}.png")
+        plt.close()
+
+        return acc, auc, acc_train, auc_train
+
+def neural_selected_relu(x_train_real, x_test_real, y_train, y_test, transform, model, selected_feats):
+    if transform == True:
+        x_train = x_train_real.copy()
+        x_test = x_test_real.copy()
+        transformer = MinMaxScaler()
+        x_train.iloc[:, 3:] = transformer.fit_transform(x_train.iloc[:, 3:])
+        x_test.iloc[:, 3:] = transformer.transform(x_test.iloc[:, 3:])
+    else:
+        x_train = x_train_real
+        x_test = x_test_real
+
+    type_str = "norm" if transform else "no_norm"
+
+    if model == 0:
+        mlp = MLPRegressor(hidden_layer_sizes=(16, 8), activation='relu', solver='sgd',
+                           learning_rate_init=0.01, max_iter=1000, random_state=1)
+        mlp.fit(x_train[selected_feats], y_train)
+
+        y_pred = mlp.predict(x_test[selected_feats])
+        rmse = np.sqrt(mean_squared_error(y_test, y_pred))
+        rsquared = r2_score(y_test, y_pred)
+
+        y_pred_train = mlp.predict(x_train[selected_feats])
+        rmse_train = np.sqrt(mean_squared_error(y_train, y_pred_train))
+        rsquared_train = r2_score(y_train, y_pred_train)
+
+        return rmse, rsquared, rmse_train, rsquared_train
+
+    elif model == 1:
+        y_train_binary = (np.asarray(y_train) >= 7)
+        y_test_binary = (np.asarray(y_test) >= 7)
+        mlp = MLPClassifier(hidden_layer_sizes=(10, 10), activation='relu', solver='sgd',
+                            learning_rate_init=0.003, max_iter=1000, random_state=1)
+        mlp.fit(x_train[selected_feats], y_train_binary)
+
+        y_probs = mlp.predict_proba(x_test[selected_feats])[:, 1]
+        ypred = mlp.predict(x_test[selected_feats])
+        acc = accuracy_score(y_test_binary, ypred)
+        auc = roc_auc_score(y_test_binary, y_probs)
+
+        y_probs_train = mlp.predict_proba(x_train[selected_feats])[:, 1]
+        ypred_train = mlp.predict(x_train[selected_feats])
+        acc_train = accuracy_score(y_train_binary, ypred_train)
+        auc_train = roc_auc_score(y_train_binary, y_probs_train)
+
+        fpr, tpr, thresh = roc_curve(y_test_binary, y_probs)
+        plt.figure()
+        plt.plot(fpr, tpr); plt.plot([0,1], [0,1], linestyle="--")
+        plt.xlabel("False Positive Rate")
+        plt.ylabel("True Positive Rate")
+        plt.title(f"ROC curve Neural Network ReLU ({type_str}) {str(selected_feats)}")
+        plt.tight_layout()
+        plt.savefig(f"logistic roc Neural Network ReLU {type_str} Selected Features.png")
+        plt.close()
+
+        return acc, auc, acc_train, auc_train
+
+
 def process_data(df):
     values = np.array(df.iloc[:, 0])
     # integer encode
@@ -368,6 +484,116 @@ def main():
     df = process_data(df)
     selected_features = gen_plots(df)
     print(df)
+
+    # BELOW ARE RELU EXPERIMENTS: DO NOT RUN
+
+    # data_inputx_relu = df.iloc[:, 0:-1]
+    # data_inputy_relu = df.iloc[:, -1]
+
+    # rmse_nn_relu = np.zeros(NUM_EXPERIMENTS)
+    # rsquared_nn_relu = np.zeros(NUM_EXPERIMENTS)
+    # acc_nn_relu = np.zeros(NUM_EXPERIMENTS)
+    # auc_nn_relu = np.zeros(NUM_EXPERIMENTS)
+
+    # rmse_nn_relu_norm = np.zeros(NUM_EXPERIMENTS)
+    # rsquared_nn_relu_norm = np.zeros(NUM_EXPERIMENTS)
+    # acc_nn_relu_norm = np.zeros(NUM_EXPERIMENTS)
+    # auc_nn_relu_norm = np.zeros(NUM_EXPERIMENTS)
+
+    # rmse_nn_relu_sel = np.zeros(NUM_EXPERIMENTS)
+    # rsquared_nn_relu_sel = np.zeros(NUM_EXPERIMENTS)
+    # acc_nn_relu_sel = np.zeros(NUM_EXPERIMENTS)
+    # auc_nn_relu_sel = np.zeros(NUM_EXPERIMENTS)
+
+    # rmse_nn_relu_sel_norm = np.zeros(NUM_EXPERIMENTS)
+    # rsquared_nn_relu_sel_norm = np.zeros(NUM_EXPERIMENTS)
+    # acc_nn_relu_sel_norm = np.zeros(NUM_EXPERIMENTS)
+    # auc_nn_relu_sel_norm = np.zeros(NUM_EXPERIMENTS)
+
+    # # train metrics
+    # rmse_nn_relu_tr = np.zeros(NUM_EXPERIMENTS)
+    # rsquared_nn_relu_tr = np.zeros(NUM_EXPERIMENTS)
+    # acc_nn_relu_tr = np.zeros(NUM_EXPERIMENTS)
+    # auc_nn_relu_tr = np.zeros(NUM_EXPERIMENTS)
+
+    # rmse_nn_relu_norm_tr = np.zeros(NUM_EXPERIMENTS)
+    # rsquared_nn_relu_norm_tr = np.zeros(NUM_EXPERIMENTS)
+    # acc_nn_relu_norm_tr = np.zeros(NUM_EXPERIMENTS)
+    # auc_nn_relu_norm_tr = np.zeros(NUM_EXPERIMENTS)
+
+    # rmse_nn_relu_sel_tr = np.zeros(NUM_EXPERIMENTS)
+    # rsquared_nn_relu_sel_tr = np.zeros(NUM_EXPERIMENTS)
+    # acc_nn_relu_sel_tr = np.zeros(NUM_EXPERIMENTS)
+    # auc_nn_relu_sel_tr = np.zeros(NUM_EXPERIMENTS)
+
+    # rmse_nn_relu_sel_norm_tr = np.zeros(NUM_EXPERIMENTS)
+    # rsquared_nn_relu_sel_norm_tr = np.zeros(NUM_EXPERIMENTS)
+    # acc_nn_relu_sel_norm_tr = np.zeros(NUM_EXPERIMENTS)
+    # auc_nn_relu_sel_norm_tr = np.zeros(NUM_EXPERIMENTS)
+
+    # for i in range(NUM_EXPERIMENTS):
+    #     x_train, x_test, y_train, y_test = split_data(i, data_inputx_relu, data_inputy_relu)
+
+    #     rmse_te, r2_te, rmse_tr_i, r2_tr_i = neural_relu(x_train, x_test, y_train, y_test, False, 0)
+    #     acc_te, auc_te, acc_tr_i, auc_tr_i = neural_relu(x_train, x_test, y_train, y_test, False, 1)
+    #     rmse_nn_relu[i], rsquared_nn_relu[i], acc_nn_relu[i], auc_nn_relu[i] = rmse_te, r2_te, acc_te, auc_te
+    #     rmse_nn_relu_tr[i], rsquared_nn_relu_tr[i], acc_nn_relu_tr[i], auc_nn_relu_tr[i] = rmse_tr_i, r2_tr_i, acc_tr_i, auc_tr_i
+
+    #     rmse_te, r2_te, rmse_tr_i, r2_tr_i = neural_relu(x_train, x_test, y_train, y_test, True, 0)
+    #     acc_te, auc_te, acc_tr_i, auc_tr_i = neural_relu(x_train, x_test, y_train, y_test, True, 1)
+    #     rmse_nn_relu_norm[i], rsquared_nn_relu_norm[i], acc_nn_relu_norm[i], auc_nn_relu_norm[i] = rmse_te, r2_te, acc_te, auc_te
+    #     rmse_nn_relu_norm_tr[i], rsquared_nn_relu_norm_tr[i], acc_nn_relu_norm_tr[i], auc_nn_relu_norm_tr[i] = rmse_tr_i, r2_tr_i, acc_tr_i, auc_tr_i
+
+    #     rmse_te, r2_te, rmse_tr_i, r2_tr_i = neural_selected_relu(x_train, x_test, y_train, y_test, False, 0, selected_features)
+    #     acc_te, auc_te, acc_tr_i, auc_tr_i = neural_selected_relu(x_train, x_test, y_train, y_test, False, 1, selected_features)
+    #     rmse_nn_relu_sel[i], rsquared_nn_relu_sel[i], acc_nn_relu_sel[i], auc_nn_relu_sel[i] = rmse_te, r2_te, acc_te, auc_te
+    #     rmse_nn_relu_sel_tr[i], rsquared_nn_relu_sel_tr[i], acc_nn_relu_sel_tr[i], auc_nn_relu_sel_tr[i] = rmse_tr_i, r2_tr_i, acc_tr_i, auc_tr_i
+
+    #     rmse_te, r2_te, rmse_tr_i, r2_tr_i = neural_selected_relu(x_train, x_test, y_train, y_test, True, 0, selected_features)
+    #     acc_te, auc_te, acc_tr_i, auc_tr_i = neural_selected_relu(x_train, x_test, y_train, y_test, True, 1, selected_features)
+    #     rmse_nn_relu_sel_norm[i], rsquared_nn_relu_sel_norm[i], acc_nn_relu_sel_norm[i], auc_nn_relu_sel_norm[i] = rmse_te, r2_te, acc_te, auc_te
+    #     rmse_nn_relu_sel_norm_tr[i], rsquared_nn_relu_sel_norm_tr[i], acc_nn_relu_sel_norm_tr[i], auc_nn_relu_sel_norm_tr[i] = rmse_tr_i, r2_tr_i, acc_tr_i, auc_tr_i
+
+    # print(f"RMSE of Neural Network ReLU no norm Mean: {rmse_nn_relu.mean():.3f}, with norm: {rmse_nn_relu_norm.mean():.3f}")
+    # print(f"RMSE of Neural Network ReLU no norm SD: {rmse_nn_relu.std():.3f}, with norm: {rmse_nn_relu_norm.std():.3f}")
+    # print(f"Rsquared of Neural Network ReLU no norm Mean: {rsquared_nn_relu.mean():.3f}, with norm: {rsquared_nn_relu_norm.mean():.3f}")
+    # print(f"Rsquared of Neural Network ReLU no norm SD: {rsquared_nn_relu.std():.3f}, with norm: {rsquared_nn_relu_norm.std():.3f}")
+
+    # print(f"Accuracy of Neural Network ReLU no norm Mean: {acc_nn_relu.mean():.3f}, with norm: {acc_nn_relu_norm.mean():.3f}")
+    # print(f"Accuracy of Neural Network ReLU no norm SD: {acc_nn_relu.std():.3f}, with norm: {acc_nn_relu_norm.std():.3f}")
+    # print(f"AUC of Neural Network ReLU no norm Mean: {auc_nn_relu.mean():.3f}, with norm: {auc_nn_relu_norm.mean():.3f}")
+    # print(f"AUC of Neural Network ReLU no norm SD: {auc_nn_relu.std():.3f}, with norm: {auc_nn_relu_norm.std():.3f}")
+
+    # print(f"RMSE of Neural Network ReLU Selected Features no norm Mean: {rmse_nn_relu_sel.mean():.3f}, with norm: {rmse_nn_relu_sel_norm.mean():.3f}")
+    # print(f"RMSE of Neural Network ReLU Selected Features no norm SD: {rmse_nn_relu_sel.std():.3f}, with norm: {rmse_nn_relu_sel_norm.std():.3f}")
+    # print(f"Rsquared of Neural Network ReLU Selected Features no norm Mean: {rsquared_nn_relu_sel.mean():.3f}, with norm: {rsquared_nn_relu_sel_norm.mean():.3f}")
+    # print(f"Rsquared of Neural Network ReLU Selected Features no norm SD: {rsquared_nn_relu_sel.std():.3f}, with norm: {rsquared_nn_relu_sel_norm.std():.3f}")
+
+    # print(f"Accuracy of Neural Network ReLU Selected Features no norm Mean: {acc_nn_relu_sel.mean():.3f}, with norm: {acc_nn_relu_sel_norm.mean():.3f}")
+    # print(f"Accuracy of Neural Network ReLU Selected Features no norm SD: {acc_nn_relu_sel.std():.3f}, with norm: {acc_nn_relu_sel_norm.std():.3f}")
+    # print(f"AUC of Neural Network ReLU Selected Features no norm Mean: {auc_nn_relu_sel.mean():.3f}, with norm: {auc_nn_relu_sel_norm.mean():.3f}")
+    # print(f"AUC of Neural Network ReLU Selected Features no norm SD: {auc_nn_relu_sel.std():.3f}, with norm: {auc_nn_relu_sel_norm.std():.3f}")
+
+    # print(f"TRAIN RMSE of Neural Network ReLU Mean: {rmse_nn_relu_tr.mean():.3f}, with norm: {rmse_nn_relu_norm_tr.mean():.3f}")
+    # print(f"TRAIN RMSE of Neural Network ReLU SD: {rmse_nn_relu_tr.std():.3f}, with norm: {rmse_nn_relu_norm_tr.std():.3f}")
+    # print(f"TRAIN Rsquared of Neural Network ReLU Mean: {rsquared_nn_relu_tr.mean():.3f}, with norm: {rsquared_nn_relu_norm_tr.mean():.3f}")
+    # print(f"TRAIN Rsquared of Neural Network ReLU SD: {rsquared_nn_relu_tr.std():.3f}, with norm: {rsquared_nn_relu_norm_tr.std():.3f}")
+
+    # print(f"TRAIN Accuracy of Neural Network ReLU no norm Mean: {acc_nn_relu_tr.mean():.3f}, with norm: {acc_nn_relu_norm_tr.mean():.3f}")
+    # print(f"TRAIN Accuracy of Neural Network ReLU no norm SD: {acc_nn_relu_tr.std():.3f}, with norm: {acc_nn_relu_norm_tr.std():.3f}")
+    # print(f"TRAIN AUC of Neural Network ReLU no norm Mean: {auc_nn_relu_tr.mean():.3f}, with norm: {auc_nn_relu_norm_tr.mean():.3f}")
+    # print(f"TRAIN AUC of Neural Network ReLU no norm SD: {auc_nn_relu_tr.std():.3f}, with norm: {auc_nn_relu_norm_tr.std():.3f}")
+
+    # print(f"TRAIN RMSE of Neural Network ReLU Selected Features no norm Mean: {rmse_nn_relu_sel_tr.mean():.3f}, with norm: {rmse_nn_relu_sel_norm_tr.mean():.3f}")
+    # print(f"TRAIN RMSE of Neural Network ReLU Selected Features no norm SD: {rmse_nn_relu_sel_tr.std():.3f}, with norm: {rmse_nn_relu_sel_norm_tr.std():.3f}")
+    # print(f"TRAIN Rsquared of Neural Network ReLU Selected Features no norm Mean: {rsquared_nn_relu_sel_tr.mean():.3f}, with norm: {rsquared_nn_relu_sel_norm_tr.mean():.3f}")
+    # print(f"TRAIN Rsquared of Neural Network ReLU Selected Features no norm SD: {rsquared_nn_relu_sel_tr.std():.3f}, with norm: {rsquared_nn_relu_sel_norm_tr.std():.3f}")
+
+    # print(f"TRAIN Accuracy of Neural Network ReLU Selected Features no norm Mean: {acc_nn_relu_sel_tr.mean():.3f}, with norm: {acc_nn_relu_sel_norm_tr.mean():.3f}")
+    # print(f"TRAIN Accuracy of Neural Network ReLU Selected Features no norm SD: {acc_nn_relu_sel_tr.std():.3f}, with norm: {acc_nn_relu_sel_norm_tr.std():.3f}")
+    # print(f"TRAIN AUC of Neural Network ReLU Selected Features no norm Mean: {auc_nn_relu_sel_tr.mean():.3f}, with norm: {auc_nn_relu_sel_norm_tr.mean():.3f}")
+    # print(f"TRAIN AUC of Neural Network ReLU Selected Features no norm SD: {auc_nn_relu_sel_tr.std():.3f}, with norm: {auc_nn_relu_sel_norm_tr.std():.3f}")
+
 
     rmse = np.zeros(NUM_EXPERIMENTS)
     rsquared = np.zeros(NUM_EXPERIMENTS)
@@ -582,4 +808,4 @@ def main():
  
 
 if __name__ =='__main__':
-    main() 
+    main()
